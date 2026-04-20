@@ -1,0 +1,48 @@
+import { createServerClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import type { Database } from '@/types/database.types'
+
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next()
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options) {
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options) {
+          response.cookies.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
+
+  // Refresh session if expired — required for Server Components
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const { pathname } = request.nextUrl
+
+  // ── /admin routes — must be authenticated ──────────────────────────────────
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    if (!session) {
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('redirectTo', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/admin/:path*'],
+}
