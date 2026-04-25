@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react'
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
+  { label: 'Universities', href: '/universities' },
   { label: 'Programmes', href: '/programmes' },
   { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
@@ -122,7 +123,7 @@ export function Navbar() {
 
           {/* ── Mobile Hamburger ────────────────────────────────────────── */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-500 hover:text-[#0F2C5E] hover:bg-gray-50 transition-colors"
+            className="md:hidden p-3 rounded-md text-gray-500 hover:text-[#0F2C5E] hover:bg-gray-50 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}

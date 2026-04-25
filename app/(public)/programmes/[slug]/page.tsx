@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+
+export const revalidate = 3600
 import {
   ChevronRight,
   MapPin,
@@ -11,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Playfair_Display } from 'next/font/google'
 
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import type { Json } from '@/types/database.types'
 import { ProgrammeCard, type ProgrammeCardData } from '@/components/shared/ProgrammeCard'
 import { ProgrammeDetailTabs } from './ProgrammeDetailTabs'
@@ -29,7 +31,7 @@ type ProgrammeDetail = {
   tuition_fee_gbp: number | null
   overview: string | null
   entry_requirements: Json | null
-  universities: { name: string; city: string | null } | null
+  universities: { name: string; city: string | null; slug: string | null } | null
   intakes: {
     id: string
     intake_date: string
@@ -58,7 +60,7 @@ const DEGREE_BADGES: Record<string, { bg: string; text: string; label: string }>
 // ── Data helpers ──────────────────────────────────────────────────────────────
 
 async function getProgramme(slug: string) {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   const { data, error } = await supabase
     .from('programmes')
@@ -72,22 +74,26 @@ async function getProgramme(slug: string) {
       tuition_fee_gbp,
       overview,
       entry_requirements,
-      universities ( id, name, city ),
+      universities ( id, name, city, slug ),
       intakes ( id, intake_date, application_deadline, status )
     `)
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
 
-  if (error || !data) return null
+  if (error) {
+    console.error(`[programme/${slug}] fetch error:`, error)
+    return null
+  }
+  if (!data) return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return data as unknown as ProgrammeDetail
 }
 
 async function getSimilarProgrammes(subjectArea: string, excludeId: string) {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('programmes')
     .select(`
       id,
@@ -106,6 +112,9 @@ async function getSimilarProgrammes(subjectArea: string, excludeId: string) {
     .order('is_featured', { ascending: false })
     .limit(3)
 
+  if (error) {
+    console.error(`[similar-programmes] fetch error:`, error)
+  }
   return (data ?? []) as ProgrammeCardData[]
 }
 
@@ -220,7 +229,18 @@ export default async function ProgrammeDetailPage({ params }: PageProps) {
           <nav className="flex items-center gap-1 text-[12px] text-gray-400 flex-wrap" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#0F2C5E] transition-colors font-medium">Home</Link>
             <ChevronRight size={13} className="flex-shrink-0" />
-            <Link href="/programmes" className="hover:text-[#0F2C5E] transition-colors font-medium">Programmes</Link>
+            <Link href="/universities" className="hover:text-[#0F2C5E] transition-colors font-medium">Universities</Link>
+            <ChevronRight size={13} className="flex-shrink-0" />
+            {uni?.slug ? (
+              <Link
+                href={`/universities/${uni.slug}`}
+                className="hover:text-[#0F2C5E] transition-colors font-medium truncate max-w-[120px] sm:max-w-none"
+              >
+                {uni.name}
+              </Link>
+            ) : (
+              <span className="font-medium truncate max-w-[120px] sm:max-w-none">{uni?.name}</span>
+            )}
             <ChevronRight size={13} className="flex-shrink-0" />
             <span className="text-gray-600 font-medium truncate max-w-[200px] sm:max-w-none">
               {programme.title}

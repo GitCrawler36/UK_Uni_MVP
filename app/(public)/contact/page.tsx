@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import { Playfair_Display } from 'next/font/google'
 import { Mail, Phone, MapPin, Clock } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Contact Us | UKAdmit',
+  description:
+    'Get in touch with our UK admissions counsellors. Free guidance for Sri Lankan students applying to UK universities.',
+}
 import { ContactForm } from './ContactForm'
 
 // ── Font ──────────────────────────────────────────────────────────────────────

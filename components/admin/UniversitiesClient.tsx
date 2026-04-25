@@ -28,12 +28,22 @@ function UniversityModal({ university, onClose, onSaved }: ModalProps) {
   const isEdit = !!university
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    name:        university?.name        ?? '',
-    slug:        university?.slug        ?? '',
-    city:        university?.city        ?? '',
-    location:    university?.location    ?? '',
-    description: university?.description ?? '',
-    is_active:   university?.is_active   ?? true,
+    name:                   university?.name                             ?? '',
+    slug:                   university?.slug                             ?? '',
+    city:                   university?.city                             ?? '',
+    location:               university?.location                        ?? '',
+    description:            university?.description                     ?? '',
+    overview:               university?.overview                        ?? '',
+    student_support:        university?.student_support                 ?? '',
+    city_info:              university?.city_info                       ?? '',
+    teaching_quality:       university?.teaching_quality                ?? '',
+    world_ranking:          university?.world_ranking?.toString()       ?? '',
+    international_students: university?.international_students?.toString() ?? '',
+    total_students:         university?.total_students?.toString()      ?? '',
+    founded_year:           university?.founded_year?.toString()        ?? '',
+    website_url:            university?.website_url                     ?? '',
+    banner_image_url:       university?.banner_image_url                ?? '',
+    is_active:              university?.is_active                       ?? true,
   })
 
   function set(key: string, value: string | boolean) {
@@ -55,13 +65,23 @@ function UniversityModal({ university, onClose, onSaved }: ModalProps) {
     const supabase = createClient() as any
 
     const payload = {
-      name:        form.name.trim(),
-      slug:        form.slug.trim(),
-      city:        form.city.trim(),
-      location:    form.location.trim() || null,
-      description: form.description.trim() || null,
-      is_active:   form.is_active,
-      country:     'United Kingdom',
+      name:                   form.name.trim(),
+      slug:                   form.slug.trim(),
+      city:                   form.city.trim(),
+      location:               form.location.trim() || null,
+      description:            form.description.trim() || null,
+      overview:               form.overview.trim() || null,
+      student_support:        form.student_support.trim() || null,
+      city_info:              form.city_info.trim() || null,
+      teaching_quality:       form.teaching_quality.trim() || null,
+      world_ranking:          form.world_ranking ? parseInt(form.world_ranking, 10) : null,
+      international_students: form.international_students ? parseInt(form.international_students, 10) : null,
+      total_students:         form.total_students ? parseInt(form.total_students, 10) : null,
+      founded_year:           form.founded_year ? parseInt(form.founded_year, 10) : null,
+      website_url:            form.website_url.trim() || null,
+      banner_image_url:       form.banner_image_url.trim() || null,
+      is_active:              form.is_active,
+      country:                'United Kingdom',
     }
 
     const { error } = isEdit
@@ -79,13 +99,17 @@ function UniversityModal({ university, onClose, onSaved }: ModalProps) {
     onClose()
   }
 
+  const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:border-[#0F2C5E] transition-colors'
+  const textareaCls = `${inputCls} resize-none`
+  const labelCls = 'block text-[12px] font-semibold text-gray-600 mb-1.5'
+
   return (
     <>
       <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
             <h2 className="text-[16px] font-bold text-gray-900">
               {isEdit ? 'Edit University' : 'Add University'}
             </h2>
@@ -95,60 +119,89 @@ function UniversityModal({ university, onClose, onSaved }: ModalProps) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5">University Name <span className="text-red-400">*</span></label>
-              <input
-                value={form.name}
-                onChange={e => set('name', e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:border-[#0F2C5E] transition-colors"
-                placeholder="e.g. University of Manchester"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5">Slug <span className="text-red-400">*</span></label>
-              <input
-                value={form.slug}
-                onChange={e => set('slug', e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[13px] font-mono focus:outline-none focus:border-[#0F2C5E] transition-colors"
-                placeholder="university-of-manchester"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5">City <span className="text-red-400">*</span></label>
-                <input
-                  value={form.city}
-                  onChange={e => set('city', e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:border-[#0F2C5E] transition-colors"
-                  placeholder="Manchester"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-semibold text-gray-600 mb-1.5">Location</label>
-                <input
-                  value={form.location}
-                  onChange={e => set('location', e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:border-[#0F2C5E] transition-colors"
-                  placeholder="Manchester, UK"
-                />
+            {/* Basic info */}
+            <div className="pb-4 border-b border-gray-50">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Basic Info</p>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>University Name <span className="text-red-400">*</span></label>
+                  <input value={form.name} onChange={e => set('name', e.target.value)} required className={inputCls} placeholder="e.g. University of Manchester" />
+                </div>
+                <div>
+                  <label className={labelCls}>Slug <span className="text-red-400">*</span></label>
+                  <input value={form.slug} onChange={e => set('slug', e.target.value)} required className={`${inputCls} font-mono text-[13px]`} placeholder="university-of-manchester" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>City <span className="text-red-400">*</span></label>
+                    <input value={form.city} onChange={e => set('city', e.target.value)} required className={inputCls} placeholder="Manchester" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Location</label>
+                    <input value={form.location} onChange={e => set('location', e.target.value)} className={inputCls} placeholder="Manchester, UK" />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Short Description</label>
+                  <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} className={textareaCls} placeholder="One-line description shown on cards…" />
+                </div>
+                <div>
+                  <label className={labelCls}>Website URL</label>
+                  <input type="url" value={form.website_url} onChange={e => set('website_url', e.target.value)} className={inputCls} placeholder="https://www.manchester.ac.uk" />
+                </div>
+                <div>
+                  <label className={labelCls}>Banner Image URL <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <input type="url" value={form.banner_image_url} onChange={e => set('banner_image_url', e.target.value)} className={inputCls} placeholder="https://…/banner.jpg" />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-[12px] font-semibold text-gray-600 mb-1.5">Description</label>
-              <textarea
-                value={form.description}
-                onChange={e => set('description', e.target.value)}
-                rows={3}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:border-[#0F2C5E] transition-colors resize-none"
-                placeholder="Brief description of the university…"
-              />
+            {/* Stats */}
+            <div className="pb-4 border-b border-gray-50">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Key Statistics</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelCls}>World Ranking</label>
+                  <input type="number" min={1} value={form.world_ranking} onChange={e => set('world_ranking', e.target.value)} className={inputCls} placeholder="e.g. 150" />
+                </div>
+                <div>
+                  <label className={labelCls}>Founded Year</label>
+                  <input type="number" min={1000} max={2024} value={form.founded_year} onChange={e => set('founded_year', e.target.value)} className={inputCls} placeholder="e.g. 1824" />
+                </div>
+                <div>
+                  <label className={labelCls}>Total Students</label>
+                  <input type="number" min={0} value={form.total_students} onChange={e => set('total_students', e.target.value)} className={inputCls} placeholder="e.g. 40000" />
+                </div>
+                <div>
+                  <label className={labelCls}>International Students</label>
+                  <input type="number" min={0} value={form.international_students} onChange={e => set('international_students', e.target.value)} className={inputCls} placeholder="e.g. 10000" />
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="pb-4 border-b border-gray-50">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Page Content</p>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>Overview</label>
+                  <textarea value={form.overview} onChange={e => set('overview', e.target.value)} rows={5} className={textareaCls} placeholder="Full description shown in the Overview tab…" />
+                </div>
+                <div>
+                  <label className={labelCls}>Teaching Quality</label>
+                  <textarea value={form.teaching_quality} onChange={e => set('teaching_quality', e.target.value)} rows={3} className={textareaCls} placeholder="Teaching quality highlights (TEF rating, research, etc.)…" />
+                </div>
+                <div>
+                  <label className={labelCls}>Student Support</label>
+                  <textarea value={form.student_support} onChange={e => set('student_support', e.target.value)} rows={4} className={textareaCls} placeholder="Student support services available at this university…" />
+                </div>
+                <div>
+                  <label className={labelCls}>City Info</label>
+                  <textarea value={form.city_info} onChange={e => set('city_info', e.target.value)} rows={3} className={textareaCls} placeholder="About the city — transport, accommodation, lifestyle…" />
+                </div>
+              </div>
             </div>
 
             {/* Is Active toggle */}
@@ -172,7 +225,7 @@ function UniversityModal({ university, onClose, onSaved }: ModalProps) {
           </form>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
             <button onClick={onClose} className="px-4 py-2 rounded-xl text-[13px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">
               Cancel
             </button>

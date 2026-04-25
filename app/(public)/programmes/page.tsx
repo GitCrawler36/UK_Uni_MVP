@@ -1,8 +1,17 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { Playfair_Display } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'UK University Programmes | UKAdmit',
+  description:
+    'Browse 100+ UK university programmes across Business, Computer Science, Engineering, Law and more. Free guidance for Sri Lankan students.',
+}
+
+export const revalidate = 3600
 import { SearchX } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import { ProgrammeCard, ProgrammeCardSkeleton, type ProgrammeCardData } from '@/components/shared/ProgrammeCard'
 import { ProgrammeFilterSidebar, MobileFilterButton, type IntakeOption } from '@/components/shared/ProgrammeFilters'
 import { ProgrammeControls } from '@/components/shared/ProgrammeControls'
@@ -46,14 +55,18 @@ type Params = ReturnType<typeof parseSearchParams>
 
 async function getAvailableIntakes(): Promise<IntakeOption[]> {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const today = new Date().toISOString().split('T')[0]
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('intakes')
       .select('intake_date')
       .gte('intake_date', today)
       .order('intake_date', { ascending: true })
 
+    if (error) {
+      console.error('[programmes] intakes fetch error:', error)
+      return []
+    }
     if (!data) return []
 
     const seen = new Set<string>()
@@ -72,14 +85,15 @@ async function getAvailableIntakes(): Promise<IntakeOption[]> {
     }
 
     return result
-  } catch {
+  } catch (err) {
+    console.error('[programmes] intakes unexpected error:', err)
     return []
   }
 }
 
 async function getProgrammes(params: Params): Promise<{ programmes: ProgrammeCardData[]; total: number }> {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = supabase
@@ -154,7 +168,8 @@ async function getProgrammes(params: Params): Promise<{ programmes: ProgrammeCar
     const paginated = filtered.slice((params.page - 1) * PAGE_SIZE, params.page * PAGE_SIZE)
 
     return { programmes: paginated, total }
-  } catch {
+  } catch (err) {
+    console.error('[programmes] unexpected error:', err)
     return { programmes: [], total: 0 }
   }
 }

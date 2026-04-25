@@ -19,6 +19,16 @@ export interface University {
   city: string | null
   country: string
   description: string | null
+  overview: string | null
+  student_support: string | null
+  city_info: string | null
+  teaching_quality: string | null
+  world_ranking: number | null
+  international_students: number | null
+  total_students: number | null
+  founded_year: number | null
+  website_url: string | null
+  banner_image_url: string | null
   is_active: boolean
   created_at: string
 }

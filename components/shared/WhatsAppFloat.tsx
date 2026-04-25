@@ -23,10 +23,16 @@ export function WhatsAppFloat() {
   return (
     <>
       <style>{`
+        @keyframes wa-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.55); }
+          60%       { box-shadow: 0 0 0 12px rgba(37,211,102,0); }
+        }
         .wa-float {
+          animation: wa-pulse 2.4s ease-out infinite;
           transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
         }
         .wa-float:hover {
+          animation: none;
           transform: scale(1.1);
           box-shadow: 0 8px 32px rgba(37, 211, 102, 0.45);
         }

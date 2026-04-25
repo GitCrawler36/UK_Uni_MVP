@@ -1,6 +1,13 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { Playfair_Display } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Study in the UK | UKAdmit by Rivil International',
+  description:
+    'Browse UK university programmes and get free expert guidance from Rivil International Education Consultancy. Sri Lanka\'s UK admissions specialists.',
+}
 import {
   Search,
   MessageCircle,
@@ -13,9 +20,11 @@ import {
   MapPin,
   Clock,
   PoundSterling,
+  BookOpen,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import { ProgrammeCard, ProgrammeCardSkeleton, type ProgrammeCardData } from '@/components/shared/ProgrammeCard'
+import type { UniversityCardData } from '@/components/shared/UniversityCard'
 
 // ── Font ──────────────────────────────────────────────────────────────────────
 
@@ -29,7 +38,7 @@ const playfair = Playfair_Display({
 
 async function getFeaturedProgrammes(): Promise<ProgrammeCardData[]> {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('programmes')
       .select(`
@@ -48,12 +57,13 @@ async function getFeaturedProgrammes(): Promise<ProgrammeCardData[]> {
       .limit(6)
 
     if (error) {
-      console.error('[home] failed to fetch featured programmes:', error.message)
+      console.error('[home] featured programmes fetch error:', error)
       return []
     }
 
     return (data ?? []) as ProgrammeCardData[]
-  } catch {
+  } catch (err) {
+    console.error('[home] featured programmes unexpected error:', err)
     return []
   }
 }
@@ -85,6 +95,73 @@ function FeaturedSkeleton() {
     <>
       {Array.from({ length: 6 }).map((_, i) => (
         <ProgrammeCardSkeleton key={i} />
+      ))}
+    </>
+  )
+}
+
+// ── Partner universities (home section) ───────────────────────────────────────
+
+async function getPartnerUniversities(): Promise<UniversityCardData[]> {
+  try {
+    const supabase = createPublicClient()
+
+    const [univResult, progResult] = await Promise.all([
+      supabase
+        .from('universities')
+        .select('id, name, slug, city, country, description')
+        .eq('is_active', true)
+        .order('name')
+        .limit(6),
+      supabase.from('programmes').select('university_id').eq('is_active', true),
+    ])
+
+    if (univResult.error) {
+      console.error('[home] universities fetch error:', univResult.error)
+      return []
+    }
+
+    const countMap: Record<string, number> = {}
+    const progData = (progResult.data ?? []) as { university_id: string | null }[]
+    for (const p of progData) {
+      if (p.university_id) countMap[p.university_id] = (countMap[p.university_id] ?? 0) + 1
+    }
+
+    type UniRow = { id: string; name: string; slug: string; city: string | null; country: string; description: string | null }
+    return (univResult.data as UniRow[] ?? []).map((u) => ({
+      ...u,
+      programmeCount: countMap[u.id] ?? 0,
+    }))
+  } catch (err) {
+    console.error('[home] universities unexpected error:', err)
+    return []
+  }
+}
+
+async function PartnerUniversitiesGrid() {
+  const universities = await getPartnerUniversities()
+  if (universities.length === 0) return null
+
+  return (
+    <>
+      {universities.map((u) => (
+        <Link
+          key={u.id}
+          href={`/universities/${u.slug}`}
+          className="group flex flex-col gap-2 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#0F2C5E]/20 hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <h3 className="text-[14px] font-bold text-gray-900 leading-snug group-hover:text-[#0F2C5E] transition-colors line-clamp-2">
+            {u.name}
+          </h3>
+          <div className="flex items-center gap-1 text-[12px] text-gray-400">
+            <MapPin size={11} aria-hidden="true" />
+            <span>{u.city ?? 'United Kingdom'}</span>
+          </div>
+          <div className="flex items-center gap-1 text-[12px] font-semibold text-[#0F2C5E] mt-auto">
+            <BookOpen size={11} aria-hidden="true" />
+            <span>{u.programmeCount} programmes</span>
+          </div>
+        </Link>
       ))}
     </>
   )
@@ -235,7 +312,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 2 · FEATURED PROGRAMMES ──────────────────────────────── */}
+      {/* ── SECTION 2 · PARTNER UNIVERSITIES ────────────────────────────── */}
+      <section className="py-16 bg-white border-b border-gray-100" aria-labelledby="universities-heading">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2
+              id="universities-heading"
+              className="text-3xl sm:text-[2rem] font-bold text-gray-900 mb-3"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              Our Partner Universities
+            </h2>
+            <p className="text-gray-500 max-w-md mx-auto text-[15px]">
+              We work directly with these UK universities to help Sri Lankan students get accepted
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+            <Suspense
+              fallback={
+                <>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-28 bg-gray-100 rounded-2xl animate-pulse"
+                    />
+                  ))}
+                </>
+              }
+            >
+              <PartnerUniversitiesGrid />
+            </Suspense>
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/universities"
+              className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-[#0F2C5E] text-[#0F2C5E] font-semibold rounded-xl hover:bg-[#0F2C5E] hover:text-white transition-all duration-200 text-sm"
+            >
+              View All Universities
+              <ChevronRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 3 · FEATURED PROGRAMMES ──────────────────────────────── */}
       <section className="py-20 bg-white" aria-labelledby="featured-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

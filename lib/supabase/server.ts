@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database.types'
 
@@ -44,5 +45,18 @@ export async function createServiceClient() {
         },
       },
     }
+  )
+}
+
+/**
+ * Cookie-free service-role client for public server components and ISR.
+ * Bypasses RLS — safe because it only runs server-side and the key is never
+ * sent to the browser.
+ */
+export function createPublicClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
   )
 }

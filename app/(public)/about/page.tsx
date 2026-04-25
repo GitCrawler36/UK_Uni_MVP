@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Playfair_Display } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'About Us | UKAdmit by Rivil International',
+  description:
+    'UKAdmit is the UK-focused admissions platform of Rivil International Education Consultancy. Helping Sri Lankan students study in the UK.',
+}
 import {
   BookOpen,
   FileText,
