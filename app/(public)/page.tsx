@@ -49,6 +49,7 @@ async function getFeaturedProgrammes(): Promise<ProgrammeCardData[]> {
         subject_area,
         duration_months,
         tuition_fee_gbp,
+        official_course_url,
         universities ( name, city ),
         intakes ( intake_date, status )
       `)

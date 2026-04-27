@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Loader2, CheckCircle, GraduationCap } from 'lucide-react'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -12,7 +13,7 @@ const contactSchema = z.object({
   full_name: z.string().min(2, 'Please enter your full name'),
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().min(8, 'Please enter a valid phone number'),
-  subject: z.enum(['General Enquiry', 'Programme Question', 'Visa Question', 'Other']),
+  subject: z.enum(['Course Enquiry', 'General Enquiry', 'Programme Question', 'Visa Question', 'Other']),
   message: z.string().min(10, 'Message must be at least 10 characters').max(1000),
 })
 
@@ -33,6 +34,11 @@ function inputClass(hasError: boolean) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ContactForm() {
+  const searchParams = useSearchParams()
+  const universityParam = searchParams.get('university') ?? ''
+  const courseParam = searchParams.get('course') ?? ''
+  const isCourseEnquiry = Boolean(universityParam && courseParam)
+
   const [submitted, setSubmitted] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -42,7 +48,9 @@ export function ContactForm() {
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { subject: 'General Enquiry' },
+    defaultValues: {
+      subject: isCourseEnquiry ? 'Course Enquiry' : 'General Enquiry',
+    },
   })
 
   const onSubmit = async (data: ContactFormValues) => {
@@ -55,8 +63,8 @@ export function ContactForm() {
           full_name: data.full_name,
           email: data.email,
           phone: data.phone,
-          programme_title: data.subject,
-          university_name: 'Contact Form',
+          programme_title: isCourseEnquiry ? courseParam : data.subject,
+          university_name: isCourseEnquiry ? universityParam : 'Contact Form',
           message: data.message,
         }),
       })
@@ -97,6 +105,26 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+
+      {/* Course enquiry info box */}
+      {isCourseEnquiry && (
+        <div
+          className="flex items-start gap-3 px-4 py-3.5 rounded-xl border"
+          style={{ backgroundColor: '#EEF2FF', borderColor: 'rgba(15,44,94,0.2)' }}
+        >
+          <GraduationCap size={16} className="flex-shrink-0 mt-0.5" style={{ color: '#0F2C5E' }} aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#0F2C5E' }}>
+              Enquiring about
+            </p>
+            <p className="text-[13px] font-semibold text-gray-800 leading-snug">
+              {courseParam}{' '}
+              <span className="font-normal text-gray-500">at</span>{' '}
+              {universityParam}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Full Name */}
       <div>
@@ -149,24 +177,26 @@ export function ContactForm() {
         )}
       </div>
 
-      {/* Subject */}
-      <div>
-        <label className="block text-[12px] font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
-          Subject <span className="text-red-500">*</span>
-        </label>
-        <select
-          {...register('subject')}
-          className={inputClass(!!errors.subject)}
-        >
-          <option value="General Enquiry">General Enquiry</option>
-          <option value="Programme Question">Programme Question</option>
-          <option value="Visa Question">Visa Question</option>
-          <option value="Other">Other</option>
-        </select>
-        {errors.subject && (
-          <p className="mt-1 text-[12px] text-red-500">{errors.subject.message}</p>
-        )}
-      </div>
+      {/* Subject — hidden when it's a course enquiry (auto-set) */}
+      {!isCourseEnquiry && (
+        <div>
+          <label className="block text-[12px] font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+            Subject <span className="text-red-500">*</span>
+          </label>
+          <select
+            {...register('subject')}
+            className={inputClass(!!errors.subject)}
+          >
+            <option value="General Enquiry">General Enquiry</option>
+            <option value="Programme Question">Programme Question</option>
+            <option value="Visa Question">Visa Question</option>
+            <option value="Other">Other</option>
+          </select>
+          {errors.subject && (
+            <p className="mt-1 text-[12px] text-red-500">{errors.subject.message}</p>
+          )}
+        </div>
+      )}
 
       {/* Message */}
       <div>
@@ -176,7 +206,11 @@ export function ContactForm() {
         <textarea
           {...register('message')}
           rows={5}
-          placeholder="How can we help you?"
+          placeholder={
+            isCourseEnquiry
+              ? 'Tell us about yourself and any questions you have about this course…'
+              : 'How can we help you?'
+          }
           className={`${inputClass(!!errors.message)} resize-none`}
         />
         {errors.message && (

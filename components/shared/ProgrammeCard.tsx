@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Clock, PoundSterling, Calendar } from 'lucide-react'
+import { MapPin, Clock, PoundSterling, Calendar, ExternalLink } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,6 +11,7 @@ export type ProgrammeCardData = {
   subject_area: string
   duration_months: number | null
   tuition_fee_gbp: number | null
+  official_course_url?: string | null
   universities: { name: string; city: string | null } | null
   intakes?: { intake_date: string; status: string }[]
 }
@@ -72,71 +73,94 @@ export function ProgrammeCard({ programme }: { programme: ProgrammeCardData }) {
       })
     : null
 
+  const universityName = programme.universities?.name ?? ''
+  const enquireHref = `/contact?university=${encodeURIComponent(universityName)}&course=${encodeURIComponent(programme.title)}`
+
   return (
-    <Link href={`/programmes/${programme.slug}`} className="group block h-full">
-      <article className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full transition-all duration-200 group-hover:shadow-xl group-hover:border-[#0F2C5E]/20 group-hover:-translate-y-0.5">
-        {/* Degree level colour bar */}
-        <div className={`h-1 w-full flex-shrink-0 ${badge.bar}`} />
+    <article className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full transition-all duration-200 hover:shadow-xl hover:border-[#0F2C5E]/20 hover:-translate-y-0.5">
+      {/* Degree level colour bar */}
+      <div className={`h-1 w-full flex-shrink-0 ${badge.bar}`} />
 
-        <div className="flex flex-col flex-1 p-5">
-          {/* University name */}
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-2 truncate">
-            {programme.universities?.name ?? 'Partner University'}
-          </p>
+      <div className="flex flex-col flex-1 p-5">
+        {/* University name */}
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-2 truncate">
+          {programme.universities?.name ?? 'Partner University'}
+        </p>
 
-          {/* Course title */}
-          <h3 className="text-[15px] font-bold text-gray-900 leading-snug mb-3 line-clamp-2 group-hover:text-[#0F2C5E] transition-colors">
-            {programme.title}
-          </h3>
+        {/* Course title */}
+        <h3 className="text-[15px] font-bold text-gray-900 leading-snug mb-3 line-clamp-2">
+          {programme.title}
+        </h3>
 
-          {/* Degree badge */}
-          <span
-            className={`self-start inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold mb-4 ${badge.bg} ${badge.text}`}
-          >
-            {badge.label}
-          </span>
+        {/* Degree badge */}
+        <span
+          className={`self-start inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold mb-4 ${badge.bg} ${badge.text}`}
+        >
+          {badge.label}
+        </span>
 
-          {/* Detail rows */}
-          <div className="space-y-2 flex-1">
-            {programme.universities?.city && (
-              <div className="flex items-center gap-2 text-[13px] text-gray-500">
-                <MapPin size={12} className="flex-shrink-0 text-gray-350" />
-                <span>{programme.universities.city}, UK</span>
-              </div>
-            )}
-            {duration && (
-              <div className="flex items-center gap-2 text-[13px] text-gray-500">
-                <Clock size={12} className="flex-shrink-0 text-gray-350" />
-                <span>{duration}</span>
-              </div>
-            )}
-            {programme.tuition_fee_gbp && (
-              <div className="flex items-center gap-2 text-[13px] text-gray-500">
-                <PoundSterling size={12} className="flex-shrink-0 text-gray-350" />
-                <span>£{programme.tuition_fee_gbp.toLocaleString()} per year</span>
-              </div>
-            )}
-          </div>
-
-          {/* Next intake pill */}
-          {intakeLabel && (
-            <div className="mt-4 flex items-center gap-1.5">
-              <Calendar size={12} className="text-[#0F2C5E] flex-shrink-0" />
-              <span className="text-[11px] font-semibold text-[#0F2C5E] bg-blue-50 px-2.5 py-0.5 rounded-full">
-                Next intake: {intakeLabel}
-              </span>
+        {/* Detail rows */}
+        <div className="space-y-2 flex-1">
+          {programme.universities?.city && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500">
+              <MapPin size={12} className="flex-shrink-0 text-gray-350" />
+              <span>{programme.universities.city}, UK</span>
             </div>
           )}
-
-          {/* View Details button */}
-          <div className="mt-4">
-            <div className="w-full py-2.5 text-center text-[13px] font-semibold rounded-xl border-2 border-[#0F2C5E] text-[#0F2C5E] group-hover:bg-[#0F2C5E] group-hover:text-white transition-all duration-200">
-              View Details
+          {duration && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500">
+              <Clock size={12} className="flex-shrink-0 text-gray-350" />
+              <span>{duration}</span>
             </div>
-          </div>
+          )}
+          {programme.tuition_fee_gbp && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500">
+              <PoundSterling size={12} className="flex-shrink-0 text-gray-350" />
+              <span>£{programme.tuition_fee_gbp.toLocaleString()} per year</span>
+            </div>
+          )}
         </div>
-      </article>
-    </Link>
+
+        {/* Next intake pill */}
+        {intakeLabel && (
+          <div className="mt-4 flex items-center gap-1.5">
+            <Calendar size={12} className="text-[#0F2C5E] flex-shrink-0" />
+            <span className="text-[11px] font-semibold text-[#0F2C5E] bg-blue-50 px-2.5 py-0.5 rounded-full">
+              Next intake: {intakeLabel}
+            </span>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="mt-4 space-y-2">
+          {/* Enquire — filled navy */}
+          <Link
+            href={enquireHref}
+            className="block w-full py-2.5 text-center text-[13px] font-semibold rounded-xl text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: '#0F2C5E' }}
+          >
+            Enquire
+          </Link>
+
+          {/* View on University Website — outlined or disabled */}
+          {programme.official_course_url ? (
+            <a
+              href={programme.official_course_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 w-full py-2.5 text-[13px] font-semibold rounded-xl border-2 border-[#0F2C5E] text-[#0F2C5E] hover:bg-[#0F2C5E]/5 transition-colors"
+            >
+              <ExternalLink size={12} aria-hidden="true" />
+              View on University Website
+            </a>
+          ) : (
+            <div className="flex items-center justify-center w-full py-2.5 text-[13px] font-semibold rounded-xl border-2 border-gray-200 text-gray-400 cursor-not-allowed select-none">
+              Course URL coming soon
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -164,8 +188,9 @@ export function ProgrammeCardSkeleton() {
         </div>
         {/* Intake pill */}
         <div className="h-5 bg-gray-100 rounded-full w-40" />
-        {/* Button */}
+        {/* Buttons */}
         <div className="h-10 bg-gray-200 rounded-xl" />
+        <div className="h-10 bg-gray-100 rounded-xl" />
       </div>
     </div>
   )

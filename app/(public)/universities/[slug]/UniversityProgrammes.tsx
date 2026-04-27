@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Clock, Tag, BookOpen, ExternalLink, Search, MessageCircle } from 'lucide-react'
 
+
+
 import type { UniversityProgramme } from './page'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -19,7 +21,7 @@ const LEVEL_STYLES: Record<string, { pill: string; label: string }> = {
 
 // ── Course card ───────────────────────────────────────────────────────────────
 
-function CourseCard({ programme }: { programme: UniversityProgramme }) {
+function CourseCard({ programme, universityName }: { programme: UniversityProgramme; universityName: string }) {
   const level = programme.degree_level?.toLowerCase() ?? ''
   const style = LEVEL_STYLES[level] ?? { pill: 'bg-gray-100 text-gray-600', label: programme.degree_level ?? 'Programme' }
 
@@ -28,6 +30,8 @@ function CourseCard({ programme }: { programme: UniversityProgramme }) {
       ? `${programme.duration_months / 12} ${programme.duration_months / 12 === 1 ? 'year' : 'years'}`
       : `${programme.duration_months} months`
     : null
+
+  const enquireHref = `/contact?university=${encodeURIComponent(universityName)}&course=${encodeURIComponent(programme.title)}`
 
   return (
     <article className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col h-full hover:shadow-md hover:border-[#0F2C5E]/20 transition-all duration-200">
@@ -63,23 +67,30 @@ function CourseCard({ programme }: { programme: UniversityProgramme }) {
 
       {/* Actions */}
       <div className="mt-auto space-y-2">
+        {/* Enquire — filled navy */}
         <Link
-          href={`/programmes/${programme.slug}`}
-          className="block w-full py-2.5 text-center text-[13px] font-semibold rounded-xl text-white transition-colors hover:opacity-90"
+          href={enquireHref}
+          className="block w-full py-2.5 text-center text-[13px] font-semibold rounded-xl text-white transition-opacity hover:opacity-90"
           style={{ backgroundColor: '#0F2C5E' }}
         >
-          View Course Details
+          Enquire
         </Link>
-        {programme.official_course_url && (
+
+        {/* View on University Website — outlined or disabled */}
+        {programme.official_course_url ? (
           <a
             href={programme.official_course_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] text-gray-500 hover:text-[#0F2C5E] transition-colors"
+            className="flex items-center justify-center gap-1.5 w-full py-2.5 text-[13px] font-semibold rounded-xl border-2 border-[#0F2C5E] text-[#0F2C5E] hover:bg-[#0F2C5E]/5 transition-colors"
           >
-            <ExternalLink size={11} aria-hidden="true" />
+            <ExternalLink size={12} aria-hidden="true" />
             View on University Website
           </a>
+        ) : (
+          <div className="flex items-center justify-center w-full py-2.5 text-[13px] font-semibold rounded-xl border-2 border-gray-200 text-gray-400 cursor-not-allowed select-none">
+            Course URL coming soon
+          </div>
         )}
       </div>
     </article>
@@ -223,7 +234,7 @@ export function UniversityProgrammes({ programmes, universityName, whatsappHref 
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((p) => (
-            <CourseCard key={p.id} programme={p} />
+            <CourseCard key={p.id} programme={p} universityName={universityName} />
           ))}
         </div>
       )}

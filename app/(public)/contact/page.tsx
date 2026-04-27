@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Playfair_Display } from 'next/font/google'
 import { Mail, Phone, MapPin, Clock } from 'lucide-react'
 
@@ -135,7 +136,9 @@ export default function ContactPage() {
                   <p className="text-[13px] text-gray-500 mb-6">
                     Fill in the form and we will get back to you within 24 hours
                   </p>
-                  <ContactForm />
+                  <Suspense fallback={<div className="h-96 animate-pulse bg-gray-50 rounded-xl" />}>
+                    <ContactForm />
+                  </Suspense>
                 </div>
               </div>
             </div>

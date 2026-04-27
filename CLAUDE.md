@@ -44,9 +44,11 @@ src/
 Public:
   /                    Home — hero, featured programmes, how it works
   /programmes          Programme listing with search and filters
-  /programmes/[slug]   Programme detail with enquiry form
+  /programmes/[slug]   Redirects to /universities/[university-slug]
+  /universities/[slug] University profile with course cards
   /about               About Us — Rivil connection and mission
   /contact             Contact Us — general enquiry form
+                       ?university=&course= params pre-fill the form
   /thank-you           Confirmation page after enquiry submitted
 
 Admin (simple password protected):
@@ -64,12 +66,12 @@ Admin (simple password protected):
 - leads           Student enquiries submitted via website
 
 ## Enquiry flow
-1. Student browses programmes on /programmes
-2. Student clicks a programme they are interested in
-3. On the programme detail page they see an enquiry panel
-4. Student fills in: Name, Email, Phone/WhatsApp, Message (optional)
-5. On submit: saved to leads table + email sent to Rivil team
-6. Student sees thank you page with Rivil WhatsApp number
+1. Student browses programmes on /programmes or /universities/[slug]
+2. Student clicks "Enquire" on a course card
+3. Student is taken to /contact?university=[name]&course=[title]
+4. Contact page shows an info box: "Enquiring about [course] at [university]"
+5. Student fills in: Name, Email, Phone/WhatsApp, Message (optional)
+6. On submit: saved to leads table + email sent to Rivil team
 7. Rivil counsellor contacts student via WhatsApp or email
 8. Everything from this point handled offline by Rivil
 
@@ -118,12 +120,17 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - Admin email notified on every new enquiry
 - WhatsApp button on every programme detail page
 - Mobile responsive on all pages
+- No individual course detail pages — courses link directly to official university website
+- Each course card has exactly two actions: "Enquire" and "View on University Website"
+- "Enquire" links to /contact?university=[name]&course=[title] (URL encoded)
+- "View on University Website" opens official_course_url in new tab; shows disabled "Course URL coming soon" if not set
+- /programmes/[slug] redirects to /universities/[university-slug]
 
 ## University data management
 - Rivil staff manage all university and programme data 
   via the admin portal at /admin
 - Each programme has an optional official_course_url field 
   linking to the university's own website
-- Programme detail page shows a "View on University Website" 
-  button if official_course_url is set
+- Every course card shows a "View on University Website" button if
+  official_course_url is set; otherwise shows "Course URL coming soon"
 - No developer needed to add or update universities or courses
